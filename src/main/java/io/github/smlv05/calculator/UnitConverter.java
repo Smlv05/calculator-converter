@@ -46,4 +46,32 @@ public class UnitConverter {
         }
         return result;
     }
+
+    private static final double ABSOLUTE_ZERO_CELSIUS = -273.15;
+
+    public double convertTemperature(double value, String from, String to) {
+        double celsius = toCelsius(value, from);
+        if (celsius < ABSOLUTE_ZERO_CELSIUS) {
+            throw new CalculationException("Temperature cannot be below absolute zero");
+        }
+        return checkResult(fromCelsius(celsius, to));
+    }
+
+    private double toCelsius(double value, String unit) {
+        return switch (unit) {
+            case "c" -> value;
+            case "f" -> (value - 32) * 5 / 9;
+            case "k" -> value + ABSOLUTE_ZERO_CELSIUS;
+            default -> throw new CalculationException("Unknown temperature unit: " + unit);
+        };
+    }
+
+    private double fromCelsius(double celsius, String unit) {
+        return switch (unit) {
+            case "c" -> celsius;
+            case "f" -> celsius * 9 / 5 + 32;
+            case "k" -> celsius - ABSOLUTE_ZERO_CELSIUS;
+            default -> throw new CalculationException("Unknown temperature unit: " + unit);
+        };
+    }
 }
