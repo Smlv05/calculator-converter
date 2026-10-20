@@ -152,4 +152,126 @@ class CalculatorTest {
             assertEquals("Cannot calculate modulo by zero", e.getMessage());
         }
     }
+
+    @Nested
+    @DisplayName("Overflow")
+    class Overflow {
+
+        @Test
+        @DisplayName("MAX_VALUE + MAX_VALUE throws exception")
+        void addOverflow() {
+            assertThrows(CalculationException.class,
+                    () -> calculator.add(Double.MAX_VALUE, Double.MAX_VALUE));
+        }
+
+        @Test
+        @DisplayName("-MAX_VALUE - MAX_VALUE throws exception")
+        void subtractOverflow() {
+            assertThrows(CalculationException.class,
+                    () -> calculator.subtract(-Double.MAX_VALUE, Double.MAX_VALUE));
+        }
+
+        @Test
+        @DisplayName("MAX_VALUE * 2 throws exception")
+        void multiplyOverflow() {
+            assertThrows(CalculationException.class,
+                    () -> calculator.multiply(Double.MAX_VALUE, 2));
+        }
+
+        @Test
+        @DisplayName("MAX_VALUE / 0.5 throws exception")
+        void divideOverflow() {
+            assertThrows(CalculationException.class,
+                    () -> calculator.divide(Double.MAX_VALUE, 0.5));
+        }
+
+        @Test
+        @DisplayName("MAX_VALUE + 1 stays MAX_VALUE because of precision loss")
+        void addOneToMaxValue() {
+            assertEquals(Double.MAX_VALUE, calculator.add(Double.MAX_VALUE, 1));
+        }
+    }
+
+    @Nested
+    @DisplayName("Power")
+    class Power {
+
+        @ParameterizedTest(name = "{0} ^ {1} = {2}")
+        @CsvSource({
+                "2, 10, 1024",
+                "2, -1, 0.5",
+                "5, 0, 1",
+                "0, 0, 1",
+                "-2, 3, -8",
+                "-2, 2, 4",
+                "4, 0.5, 2",
+                "1.5, 2, 2.25"
+        })
+        void raisesToPower(double base, double exponent, double expected) {
+            assertEquals(expected, calculator.power(base, exponent), DELTA);
+        }
+
+        @ParameterizedTest(name = "{0} ^ {1} throws exception")
+        @CsvSource({
+                "0, -1",
+                "-8, 0.3333333333333333",
+                "10, 400"
+        })
+        void throwsOnInvalidResult(double base, double exponent) {
+            assertThrows(CalculationException.class,
+                    () -> calculator.power(base, exponent));
+        }
+    }
+
+    @Nested
+    @DisplayName("Square root")
+    class SquareRoot {
+
+        @ParameterizedTest(name = "sqrt({0}) = {1}")
+        @CsvSource({
+                "4, 2",
+                "0, 0",
+                "0.25, 0.5",
+                "2, 1.4142135623730951"
+        })
+        void calculatesSquareRoot(double a, double expected) {
+            assertEquals(expected, calculator.sqrt(a), DELTA);
+        }
+
+        @ParameterizedTest(name = "sqrt({0}) throws exception")
+        @ValueSource(doubles = {-0.0001, -1, -100})
+        void throwsOnNegativeNumber(double a) {
+            CalculationException e = assertThrows(
+                    CalculationException.class,
+                    () -> calculator.sqrt(a)
+            );
+            assertEquals("Cannot calculate square root of a negative number", e.getMessage());
+        }
+    }
+
+    @Nested
+    @DisplayName("Percent")
+    class Percent {
+
+        @ParameterizedTest(name = "{1}% of {0} = {2}")
+        @CsvSource({
+                "200, 10, 20",
+                "200, 0, 0",
+                "200, 100, 200",
+                "200, 150, 300",
+                "200, -10, -20",
+                "0, 50, 0",
+                "-200, 10, -20",
+                "50, 12.5, 6.25"
+        })
+        void calculatesPercent(double number, double percent, double expected) {
+            assertEquals(expected, calculator.percent(number, percent), DELTA);
+        }
+
+        @Test
+        @DisplayName("50% of MAX_VALUE does not overflow")
+        void percentOfMaxValue() {
+            assertEquals(Double.MAX_VALUE / 2, calculator.percent(Double.MAX_VALUE, 50), DELTA);
+        }
+    }
 }
